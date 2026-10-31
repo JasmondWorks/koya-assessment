@@ -21,8 +21,8 @@ const envSchema = z.object({
   API_KEY: z.string().min(8, "API_KEY must be at least 8 characters"),
 
   // Postgres connection string (Neon in production). Required — there's
-  // no in-memory fallback, because the whole point of this variable is
-  // the task's own requirement that bookings survive a restart/redeploy.
+  // no in-memory fallback, since bookings need to survive a process
+  // restart or redeploy.
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
 });
 

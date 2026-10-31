@@ -165,10 +165,11 @@ async function listBookingsByEmailPage(
       where: { id: cursor },
       select: { seq: true },
     });
-    // An unrecognized cursor is treated as "start over" rather than an
-    // error — see bookings.service.ts's original reasoning, preserved
-    // here: there's no single right answer for how to handle an invalid
-    // cursor, so we pick the forgiving default over a brittle one.
+    // An unrecognized cursor (cursorRow is undefined) falls through to
+    // cursorSeq staying undefined, which the query below treats as "no
+    // cursor" — i.e. start from the first page. There's no single right
+    // answer for a stale/invalid cursor, so this picks the forgiving
+    // behavior (restart) over returning an error for it.
     cursorSeq = cursorRow?.seq;
   }
 

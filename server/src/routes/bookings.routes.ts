@@ -23,10 +23,10 @@ export const bookingsRouter = Router();
  *      consume rate-limit budget or get re-validated — see that
  *      middleware's comment for why.
  *   2. rateLimitBookingAttempts — runs before validation, on purpose:
- *      failed attempts count toward the 5-per-minute
- *      limit, so a request that's about to fail validation still needs
- *      to consume one attempt — but only on a genuinely new attempt,
- *      which is everything that reaches this point.
+ *      failed attempts count toward the 5-per-minute limit, so a
+ *      request that's about to fail validation still needs to consume
+ *      one attempt — but only on a genuinely new attempt, which is
+ *      everything that reaches this point.
  *   3. validate(newBookingSchema) — only requests that get this far have
  *      a well-formed body; the controller can trust `req.body`'s shape.
  *   4. the controller — runs the slot lookup / started check / conflict

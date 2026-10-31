@@ -12,6 +12,17 @@
  * Deliberately scoped to this one route rather than applied globally —
  * a global rate limiter would need a different key entirely (IP?),
  * since "per email" only exists once the body has been parsed.
+ *
+ * Unlike bookings/slots/idempotency records, this counter stays in
+ * plain memory rather than moving to Postgres. That's a deliberate
+ * tradeoff, not an inconsistency: this app runs as one persistent
+ * process (see render.yaml — a web service, not serverless), so an
+ * in-memory counter is correct here as long as that stays true. It
+ * would stop being correct under more than one instance, since each
+ * instance would count attempts separately. If this ever needs to run
+ * on multiple instances, this counter would need to move to something
+ * shared (Redis, or Postgres like everything else) the same way the
+ * booking-claim logic did.
  */
 import type { NextFunction, Request, Response } from "express";
 import { tooManyRequests } from "../lib/http-error";
@@ -20,10 +31,11 @@ const WINDOW_MS = 60_000;
 const MAX_ATTEMPTS_PER_WINDOW = 5;
 
 // email -> timestamps (ms since epoch) of attempts still inside the window.
-// Same "no await in the critical section" reasoning as store.ts applies
-// here too: read-then-write on this Map must stay synchronous so two
-// near-simultaneous requests for the same email can't both read "4
-// attempts so far" and both proceed.
+// The read-then-write on this Map stays synchronous (no `await` between
+// reading `recent` and calling `.set` below), so two near-simultaneous
+// requests for the same email can't both read "4 attempts so far" and
+// both proceed to 5 — Node processes one request handler's synchronous
+// code to completion before starting the next.
 const attemptsByEmail = new Map<string, number[]>();
 
 function normalizeEmailForRateLimitKey(rawEmail: unknown): string | null {
