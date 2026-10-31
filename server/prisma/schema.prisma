@@ -1,0 +1,65 @@
+// Prisma schema — Postgres (Neon), replacing the in-memory store so
+// bookings survive a restart/redeploy, per the task's persistence
+// requirement.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Slot {
+  id       String   @id
+  provider String
+  start    DateTime
+  end      DateTime
+
+  @@index([start])
+}
+
+model Booking {
+  // `seq` is a pure, monotonically-increasing insertion-order key —
+  // used ONLY for cursor pagination (see bookings.repository.ts).
+  // `id` is the public, randomly-generated identifier the contract
+  // actually exposes. Two separate keys because a UUID can't be used
+  // to resume a "give me the next page after this one" query — UUIDs
+  // aren't chronologically sortable, and sorting by `createdAt` alone
+  // breaks ties between bookings created in the same millisecond.
+  seq       Int      @id @default(autoincrement())
+  id        String   @unique @default(uuid())
+  slotId    String
+  name      String
+  email     String
+  status    String // "confirmed" | "cancelled"
+  createdAt DateTime @default(now())
+
+  @@index([email, seq])
+}
+
+// The Level 3 (race-condition) guarantee lives here, not in application
+// code: a slot has at most one ActiveBooking row, enforced by this
+// table's primary key. Confirming a booking inserts a row; cancelling
+// deletes it. Two concurrent "confirm" attempts for the same slot both
+// try to INSERT the same primary key — Postgres guarantees only one of
+// those transactions commits, and the other gets a unique-constraint
+// violation, which the app turns into a 409. This is the same mutual
+// exclusion idea the in-memory version used (a Map entry that can only
+// be set once per slot while it exists), expressed as something the
+// database itself enforces across however many app instances exist —
+// which matters now that correctness can't rely on being a single
+// Node process.
+model ActiveBooking {
+  slotId    String @id
+  bookingId String @unique
+}
+
+model IdempotencyRecord {
+  key             String   @id
+  bodyFingerprint String
+  statusCode      Int
+  responseBody    Json
+  responseHeaders Json
+  createdAt       DateTime @default(now())
+}
