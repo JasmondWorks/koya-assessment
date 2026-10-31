@@ -6,11 +6,12 @@
   "type": "commonjs",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "build": "prisma generate && tsc -p tsconfig.json",
-    "start": "prisma migrate deploy && node dist/server.js",
+    "dev": "node init && tsx watch src/server.ts",
+    "build": "node init && prisma generate && tsc -p tsconfig.json",
+    "start": "node init && prisma migrate deploy && node dist/server.js",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "seed": "tsx scripts/seed.ts"
   },
   "engines": {
     "node": ">=18"
