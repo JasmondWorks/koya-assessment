@@ -8,7 +8,35 @@
  */
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
-import { BackendApiError, createBooking } from "@/lib/backend";
+import { BackendApiError, createBooking, listBookings } from "@/lib/backend";
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const email = searchParams.get("email");
+
+  if (!email) {
+    return NextResponse.json({ error: "email is required" }, { status: 400 });
+  }
+
+  const limitParam = searchParams.get("limit");
+  const cursor = searchParams.get("cursor") ?? undefined;
+
+  try {
+    const page = await listBookings(email, {
+      limit: limitParam ? Number(limitParam) : undefined,
+      cursor,
+    });
+    return NextResponse.json(page);
+  } catch (error) {
+    if (error instanceof BackendApiError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.statusCode },
+      );
+    }
+    throw error;
+  }
+}
 
 export async function POST(request: Request) {
   const body = await request.json();
