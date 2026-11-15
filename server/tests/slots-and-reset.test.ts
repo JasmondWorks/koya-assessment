@@ -1,6 +1,40 @@
 import { describe, expect, it } from "vitest";
 import { authed, FUTURE_SLOT, resetWithSlots } from "./helpers";
 
+describe("POST /reset — validation", () => {
+  it("400s when a slot's start isn't a valid date-time", async () => {
+    const res = await authed()
+      .post("/reset")
+      .send({
+        slots: [{ id: "s1", provider: "Dr Ade", start: "not-a-date", end: "2027-06-10T09:30:00Z" }],
+      });
+    expect(res.status).toBe(400);
+  });
+
+  it("400s when a slot's end is before its start", async () => {
+    const res = await authed()
+      .post("/reset")
+      .send({
+        slots: [
+          {
+            id: "s1",
+            provider: "Dr Ade",
+            start: "2027-06-10T09:30:00Z",
+            end: "2027-06-10T09:00:00Z",
+          },
+        ],
+      });
+    expect(res.status).toBe(400);
+  });
+
+  it("400s when a required field is missing", async () => {
+    const res = await authed()
+      .post("/reset")
+      .send({ slots: [{ id: "s1", start: "2027-06-10T09:00:00Z", end: "2027-06-10T09:30:00Z" }] });
+    expect(res.status).toBe(400);
+  });
+});
+
 describe("POST /reset", () => {
   it("replaces slots and wipes prior bookings", async () => {
     await resetWithSlots([FUTURE_SLOT]);

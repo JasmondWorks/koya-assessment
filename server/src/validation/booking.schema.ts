@@ -1,8 +1,8 @@
 /**
- * Zod schemas are the single source of truth for request shapes — see
- * A generic factory means each route attaches its schema via
- * the generic `validate()` middleware factory (lib/validate.ts) rather
- * than re-checking fields by hand inside the controller.
+ * Zod schemas are the single source of truth for request shapes. A
+ * generic `validate()` middleware factory (middleware/validate.ts)
+ * attaches these to each route, rather than re-checking fields by hand
+ * inside the controller.
  */
 import { z } from "zod";
 
