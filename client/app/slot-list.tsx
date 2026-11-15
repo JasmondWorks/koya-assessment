@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 import type { Slot } from "@/lib/backend";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { InputField } from "@/components/form/input-field";
 
 interface Booking {
   id: string;
@@ -33,74 +37,74 @@ export function SlotList({ slots }: { slots: Slot[] }) {
 
   if (confirmedBooking) {
     return (
-      <div className="mt-8 rounded-lg border border-green-200 bg-green-50 p-6 dark:border-green-900 dark:bg-green-950">
-        <h2 className="text-lg font-medium text-green-900 dark:text-green-100">
-          Booking confirmed
-        </h2>
-        <dl className="mt-4 space-y-1 text-sm text-green-800 dark:text-green-200">
-          <div className="flex gap-2">
-            <dt className="font-medium">Booking ID:</dt>
-            <dd>{confirmedBooking.id}</dd>
+      <Card className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950">
+        <CardContent className="space-y-3">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-medium text-green-900 dark:text-green-100">
+              Booking confirmed
+            </h2>
+            <Badge>{confirmedBooking.status}</Badge>
           </div>
-          <div className="flex gap-2">
-            <dt className="font-medium">Name:</dt>
-            <dd>{confirmedBooking.name}</dd>
-          </div>
-          <div className="flex gap-2">
-            <dt className="font-medium">Email:</dt>
-            <dd>{confirmedBooking.email}</dd>
-          </div>
-          <div className="flex gap-2">
-            <dt className="font-medium">Status:</dt>
-            <dd>{confirmedBooking.status}</dd>
-          </div>
-        </dl>
-      </div>
+          <dl className="space-y-1 text-sm text-green-800 dark:text-green-200">
+            <div className="flex gap-2">
+              <dt className="font-medium">Booking ID:</dt>
+              <dd>{confirmedBooking.id}</dd>
+            </div>
+            <div className="flex gap-2">
+              <dt className="font-medium">Name:</dt>
+              <dd>{confirmedBooking.name}</dd>
+            </div>
+            <div className="flex gap-2">
+              <dt className="font-medium">Email:</dt>
+              <dd>{confirmedBooking.email}</dd>
+            </div>
+          </dl>
+          <Button variant="outline" size="sm" onClick={() => setConfirmedBooking(null)}>
+            Book another slot
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <ul className="mt-8 space-y-3">
+    <ul className="space-y-3">
       {slots.length === 0 && (
-        <li className="text-zinc-500 dark:text-zinc-400">
-          No slots available right now.
-        </li>
+        <li className="text-muted-foreground">No slots available right now.</li>
       )}
       {slots.map((slot) => (
-        <li
-          key={slot.id}
-          className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800"
-        >
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="font-medium text-zinc-900 dark:text-zinc-50">
-                {slot.provider}
-              </p>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                {formatSlotTime(slot.start, slot.end)}
-              </p>
-            </div>
-            {slot.available ? (
-              <button
-                type="button"
-                onClick={() =>
-                  setOpenSlotId(openSlotId === slot.id ? null : slot.id)
-                }
-                className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-zinc-50 dark:text-zinc-900"
-              >
-                Book
-              </button>
-            ) : (
-              <span className="text-sm text-zinc-400">Unavailable</span>
-            )}
-          </div>
+        <li key={slot.id}>
+          <Card>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="font-medium">{slot.provider}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {formatSlotTime(slot.start, slot.end)}
+                  </p>
+                </div>
+                {slot.available ? (
+                  <Button
+                    size="sm"
+                    onClick={() =>
+                      setOpenSlotId(openSlotId === slot.id ? null : slot.id)
+                    }
+                  >
+                    Book
+                  </Button>
+                ) : (
+                  <Badge variant="secondary">Unavailable</Badge>
+                )}
+              </div>
 
-          {openSlotId === slot.id && (
-            <BookingForm
-              slotId={slot.id}
-              onBooked={(booking) => setConfirmedBooking(booking)}
-            />
-          )}
+              {openSlotId === slot.id && (
+                <BookingForm
+                  slotId={slot.id}
+                  onBooked={(booking) => setConfirmedBooking(booking)}
+                />
+              )}
+            </CardContent>
+          </Card>
         </li>
       ))}
     </ul>
@@ -152,39 +156,24 @@ function BookingForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-4 space-y-3">
-      <div>
-        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-          Name
-        </label>
-        <input
-          type="text"
-          required
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-          Email
-        </label>
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-        />
-      </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900"
-      >
+    <form onSubmit={handleSubmit} className="space-y-3 border-t pt-3">
+      <InputField
+        label="Name"
+        required
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <InputField
+        label="Email"
+        type="email"
+        required
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      {error && <p className="text-sm text-destructive">{error}</p>}
+      <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Booking…" : "Confirm booking"}
-      </button>
+      </Button>
     </form>
   );
 }

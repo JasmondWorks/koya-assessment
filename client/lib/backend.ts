@@ -81,3 +81,26 @@ export function createBooking(
     body: JSON.stringify(input),
   });
 }
+
+export function getBooking(id: string): Promise<Booking> {
+  return request(`/bookings/${encodeURIComponent(id)}`);
+}
+
+export function cancelBooking(id: string): Promise<Booking> {
+  return request(`/bookings/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
+export interface BookingsPage {
+  bookings: Booking[];
+  next_cursor: string | null;
+}
+
+export function listBookings(
+  email: string,
+  options?: { limit?: number; cursor?: string },
+): Promise<BookingsPage> {
+  const params = new URLSearchParams({ email });
+  if (options?.limit) params.set("limit", String(options.limit));
+  if (options?.cursor) params.set("cursor", options.cursor);
+  return request(`/bookings?${params.toString()}`);
+}
